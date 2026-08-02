@@ -7,7 +7,11 @@ export async function GET() {
   let healthy = true;
   if (process.env.DATABASE_URL) {
     try { await checkDatabase(); checks.postgres = "ok"; }
-    catch { checks.postgres = "error"; healthy = false; }
+    catch (error) {
+      console.error("[health] postgres check failed", error instanceof Error ? error.message : error);
+      checks.postgres = "error";
+      healthy = false;
+    }
   } else checks.postgres = "not_configured";
   const redis = await checkRedis();
   checks.redis = redis.configured ? (redis.ok ? "ok" : "error") : "not_configured";
@@ -20,5 +24,5 @@ export async function GET() {
     : Boolean(process.env.INFNET_PAYMENT_WEBHOOK_SECRET);
   checks.payment = paymentConfigured ? paymentProvider : "not_configured";
   if (production && (!paymentConfigured || process.env.INFNET_ALLOW_UNPAID_DEV === "true")) healthy = false;
-  return NextResponse.json({ ok: healthy, service: "infnet-control-plane", version: "0.1.0", checks, time: new Date().toISOString() }, { status: healthy ? 200 : 503 });
+  return NextResponse.json({ ok: healthy, service: "infnet-control-plane", version: "0.1.1", checks, time: new Date().toISOString() }, { status: healthy ? 200 : 503 });
 }

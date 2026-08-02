@@ -14,7 +14,11 @@ function withDatabaseTimeout<T>(promise: Promise<T>, milliseconds = 8000): Promi
 }
 function ensureDatabaseReady(): Promise<void> {
   if (!httpSql) return Promise.resolve();
-  if (!databaseReady) databaseReady = withDatabaseTimeout(initializeDatabaseHttp(httpSql)).catch((error) => { databaseReady = null; throw error; });
+  if (!databaseReady) databaseReady = withDatabaseTimeout(initializeDatabaseHttp(httpSql)).catch((error) => {
+    console.error("[database] automatic initialization failed", error instanceof Error ? error.message : error);
+    databaseReady = null;
+    throw error;
+  });
   return databaseReady;
 }
 export async function checkDatabase(): Promise<void> {

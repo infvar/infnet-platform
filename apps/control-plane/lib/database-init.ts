@@ -2,7 +2,7 @@ import type { Pool } from "@neondatabase/serverless";
 
 // The control plane can start on a serverless platform without a migration job.
 // Every statement is idempotent so concurrent cold starts are safe.
-const schema = [
+export const schema = [
   "CREATE EXTENSION IF NOT EXISTS pgcrypto",
   "CREATE TABLE IF NOT EXISTS plans (id TEXT PRIMARY KEY, name TEXT NOT NULL, price_cents INTEGER NOT NULL CHECK (price_cents >= 0), tunnels INTEGER NOT NULL, traffic_gb INTEGER NOT NULL, enabled BOOLEAN NOT NULL DEFAULT TRUE, created_at TIMESTAMPTZ NOT NULL DEFAULT now())",
   "CREATE TABLE IF NOT EXISTS nodes (id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, region TEXT NOT NULL, capabilities JSONB NOT NULL DEFAULT '[\"cdn\", \"frp\"]'::jsonb, status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('online','offline','pending')), address TEXT, last_seen TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT now())",
@@ -53,4 +53,11 @@ export async function initializeDatabase(pool: Pool): Promise<void> {
     await client.query("SELECT pg_advisory_unlock(hashtext('infnet_schema_v1'))").catch(() => undefined);
     client.release();
   }
+}
+
+// Edge runtimes should use Neon HTTP transactions instead of a WebSocket Pool
+// for schema setup. All statements are trusted application SQL.
+export async function initializeDatabaseHttp(sql: any): Promise<void> {
+  const queries = [sql`SELECT pg_advisory_xact_lock(hashtext('infnet_schema_v1'))`, ...schema.map((statement) => sql`${sql.unsafe(statement)}`)];
+  await sql.transaction(queries);
 }

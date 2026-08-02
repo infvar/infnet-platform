@@ -1,19 +1,19 @@
 import { NextResponse } from "next/server";
-import { pool } from "../../../lib/persistence";
+import { checkDatabase } from "../../../lib/persistence";
 import { checkRedis } from "../../../lib/rate-limit";
 
 export async function GET() {
   const checks: Record<string, string> = {};
   let healthy = true;
-  if (pool) {
-    try { await pool.query("SELECT 1"); checks.postgres = "ok"; }
+  if (process.env.DATABASE_URL) {
+    try { await checkDatabase(); checks.postgres = "ok"; }
     catch { checks.postgres = "error"; healthy = false; }
   } else checks.postgres = "not_configured";
   const redis = await checkRedis();
   checks.redis = redis.configured ? (redis.ok ? "ok" : "error") : "not_configured";
   if (redis.configured && !redis.ok) healthy = false;
   const production = process.env.NODE_ENV === "production";
-  if (production && (!pool || !redis.configured)) healthy = false;
+  if (production && (!process.env.DATABASE_URL || !redis.configured)) healthy = false;
   const paymentProvider = process.env.INFNET_PAYMENT_PROVIDER || "webhook";
   const paymentConfigured = paymentProvider === "stripe"
     ? Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET && process.env.INFNET_PUBLIC_URL)

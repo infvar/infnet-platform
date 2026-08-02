@@ -1,14 +1,28 @@
-import { Pool } from "@neondatabase/serverless";
+import { Pool, neon } from "@neondatabase/serverless";
 import { db, Node, Plan, Tunnel, Command, CommandResult } from "./store";
-import { initializeDatabase } from "./database-init";
+import { initializeDatabaseHttp } from "./database-init";
 
 const databaseSsl = process.env.DATABASE_SSL === "false" ? false : {
   rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== "false",
   ...(process.env.DATABASE_SSL_CA ? { ca: process.env.DATABASE_SSL_CA.replace(/\\n/g, "\n") } : {}),
 };
 const rawPool = process.env.DATABASE_URL ? new Pool({ connectionString: process.env.DATABASE_URL, max: Number(process.env.DB_POOL_SIZE || 10), ssl: databaseSsl }) : null;
-const databaseReady = rawPool ? initializeDatabase(rawPool) : Promise.resolve();
-export const pool = rawPool ? new Proxy(rawPool, { get(target, property, receiver) { if (property === "query") return (...args: any[]) => databaseReady.then(() => (target.query as any)(...args)); if (property === "connect") return (...args: any[]) => databaseReady.then(() => (target.connect as any)(...args)); return Reflect.get(target, property, receiver); } }) as Pool : null;
+const httpSql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
+let databaseReady: Promise<void> | null = null;
+function withDatabaseTimeout<T>(promise: Promise<T>, milliseconds = 8000): Promise<T> {
+  return Promise.race([promise, new Promise<T>((_, reject) => setTimeout(() => reject(new Error("database_timeout")), milliseconds))]);
+}
+function ensureDatabaseReady(): Promise<void> {
+  if (!httpSql) return Promise.resolve();
+  if (!databaseReady) databaseReady = withDatabaseTimeout(initializeDatabaseHttp(httpSql)).catch((error) => { databaseReady = null; throw error; });
+  return databaseReady;
+}
+export async function checkDatabase(): Promise<void> {
+  if (!httpSql) throw new Error("DATABASE_URL is not configured");
+  await ensureDatabaseReady();
+  await withDatabaseTimeout(httpSql`SELECT 1`);
+}
+export const pool = rawPool ? new Proxy(rawPool, { get(target, property, receiver) { if (property === "query") return (...args: any[]) => ensureDatabaseReady().then(() => (target.query as any)(...args)); if (property === "connect") return (...args: any[]) => ensureDatabaseReady().then(() => (target.connect as any)(...args)); return Reflect.get(target, property, receiver); } }) as Pool : null;
 export const databaseEnabled = Boolean(pool);
 const nodeHeartbeatTimeoutSeconds = 60;
 

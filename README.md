@@ -11,6 +11,10 @@ npm run dev
 
 打开 http://localhost:3000。生产环境必须设置 Neon 或其他支持 Serverless/HTTP 的 PostgreSQL 连接串；控制面运行在 Edge runtime，不能使用本机 TCP PostgreSQL。数据库会在首次请求时自动创建表、索引、默认套餐并补齐兼容迁移，不需要单独运行 migration 容器。
 
+## Vercel 部署
+
+这是一个 monorepo，Vercel 项目的 `Root Directory` 必须设置为 `apps/control-plane`，不能使用仓库根目录 `./`。`Framework Preset` 选择 `Next.js`；`Build Command`、`Install Command` 和 `Output Directory` 都关闭 Override 或留空，让 Vercel 自动执行 Next.js 构建。不要把输出目录设置为 `public`、`.next` 或 `out`。如果启用了 `Include files outside the root directory`，保持启用以读取仓库根目录的 lockfile；仓库根目录的 `vercel.json` 只声明 Next.js framework。
+
 ```bash
 DATABASE_URL='postgresql://user:password@ep-example.us-east-2.aws.neon.tech/infnet?sslmode=require'
 INFNET_ADMIN_TOKEN='replace-me' \

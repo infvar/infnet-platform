@@ -1,0 +1,7 @@
+import { NextResponse } from "next/server";
+import { insertOrder, listOrders, listPlans } from "../../../../lib/persistence";
+import { requireUser } from "../../../../lib/user-auth";
+import { writeAudit } from "../../../../lib/persistence";
+import { createCheckout } from "../../../../lib/payment";
+export async function GET(req: Request) { const auth = await requireUser(req); if (auth.response) return auth.response; return NextResponse.json({ data: await listOrders(auth.userId) }); }
+export async function POST(req: Request) { const auth = await requireUser(req); if (auth.response) return auth.response; const body = await req.json(); const plan = (await listPlans()).find((item) => item.id === body.planId); if (!plan) return NextResponse.json({ error: "plan_not_found" }, { status: 404 }); const order = { id: `ord_${crypto.randomUUID()}`, userId: auth.userId, planId: plan.id, amount: plan.price, status: "pending" as const, createdAt: new Date().toISOString() }; const created = await insertOrder(order); await writeAudit({ actorId: auth.userId, action: "order.created", targetType: "order", targetId: created.id, metadata: { planId: plan.id, amount: plan.price } }); try { const checkout = await createCheckout(created, plan); return NextResponse.json({ data: created, checkout }, { status: 201 }); } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "checkout_failed", orderId: created.id }, { status: 502 }); } }

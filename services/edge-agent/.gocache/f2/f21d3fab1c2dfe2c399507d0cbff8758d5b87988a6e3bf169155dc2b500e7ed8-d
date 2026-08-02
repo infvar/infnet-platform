@@ -1,0 +1,25 @@
+# test log
+getenv INFNET_CDN_MAX_CACHE_ENTRIES
+getenv INFNET_CDN_MAX_CACHE_ENTRIES
+getenv INFNET_CDN_MAX_CACHE_ENTRIES
+getenv INFNET_ALLOW_PLAINTEXT
+getenv INFNET_ALLOW_PLAINTEXT
+getenv INFNET_ALLOW_PLAINTEXT
+getenv INFNET_ALLOW_PLAINTEXT
+getenv INFNET_ALLOW_PLAINTEXT
+getenv INFNET_ALLOW_PLAINTEXT
+getenv INFNET_ALLOW_PLAINTEXT
+getenv INFNET_ALLOW_PLAINTEXT
+getenv GOTMPDIR
+getenv TMPDIR
+stat /var/folders/22/352m66vs4gxb4x5pp8lqkxlm0000gn/T/TestAgentStateRoundTrip3315226076/001/nested
+stat /var/folders/22/352m66vs4gxb4x5pp8lqkxlm0000gn/T/TestAgentStateRoundTrip3315226076/001
+open /var/folders/22/352m66vs4gxb4x5pp8lqkxlm0000gn/T/TestAgentStateRoundTrip3315226076/001/nested/agent-state.json.tmp
+stat /var/folders/22/352m66vs4gxb4x5pp8lqkxlm0000gn/T/TestAgentStateRoundTrip3315226076/001/nested/agent-state.json
+open /var/folders/22/352m66vs4gxb4x5pp8lqkxlm0000gn/T/TestAgentStateRoundTrip3315226076/001/nested/agent-state.json
+open /var/folders/22/352m66vs4gxb4x5pp8lqkxlm0000gn/T
+getenv GOTMPDIR
+getenv TMPDIR
+open /var/folders/22/352m66vs4gxb4x5pp8lqkxlm0000gn/T/TestAgentStateRejectsMalformedFile3010253154/001/agent-state.json
+open /var/folders/22/352m66vs4gxb4x5pp8lqkxlm0000gn/T/TestAgentStateRejectsMalformedFile3010253154/001/agent-state.json
+open /var/folders/22/352m66vs4gxb4x5pp8lqkxlm0000gn/T

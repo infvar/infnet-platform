@@ -1,0 +1,6 @@
+{
+  "name": "infnet-platform",
+  "private": true,
+  "scripts": {"dev": "npm --prefix apps/control-plane run dev", "build": "npm --prefix apps/control-plane run build", "start": "npm --prefix apps/control-plane run start"},
+  "workspaces": ["apps/*"]
+}

@@ -1,0 +1,24 @@
+[Unit]
+Description=infNet edge CDN and tunnel agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=infnet
+Group=infnet
+WorkingDirectory=/opt/infnet-edge-agent
+EnvironmentFile=/etc/infnet/edge-agent.env
+ExecStart=/opt/infnet-edge-agent/edge-agent
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+StateDirectory=infnet
+ReadWritePaths=/var/lib/infnet
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target
